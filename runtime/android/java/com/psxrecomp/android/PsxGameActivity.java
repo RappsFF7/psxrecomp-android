@@ -129,6 +129,7 @@ public class PsxGameActivity extends SDLActivity {
         try {
             PsxFiles.copyBundledRuntimeFiles(this);
             PsxFiles.installBundledOverlays(this, resString("psx_game_id"));
+            ModsMenu.install(this);   /* the game's mod catalog -> files/mods/bundled */
         } catch (IOException e) {
             Toast.makeText(this, "Could not prepare game runtime files: " + e.getMessage(),
                     Toast.LENGTH_LONG).show();

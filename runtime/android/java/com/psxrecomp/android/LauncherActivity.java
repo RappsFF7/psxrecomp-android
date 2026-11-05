@@ -168,6 +168,14 @@ public class LauncherActivity extends Activity {
         settings.setOnClickListener(v -> new PsxMenu(this, null).showSettings());
         root.addView(settings, button(dp));
 
+        /* The game's own mod features (assets/mods/bundled), when the APK carries any. */
+        if (ModsMenu.available(this)) {
+            Button mods = new Button(this);
+            mods.setText("Mods");
+            mods.setOnClickListener(v -> ModsMenu.show(this));
+            root.addView(mods, button(dp));
+        }
+
         TextView hint = new TextView(this);
         hint.setText("Pick the .cue and its .bin together (long-press to select both), "
                 + "or a single .bin, .iso or .chd. Several discs: select every disc's .cue and .bin "
