@@ -238,6 +238,30 @@ final class ModsMenu {
         intro.setPadding(0, 0, 0, (int) (8 * dp));
         list.addView(intro);
 
+        // One switch at the top that turns every feature on or off. It shows "on" while every
+        // feature is on, and follows the feature switches as they change.
+        final Switch all = new Switch(activity);
+        all.setText("All mods");
+        all.setTypeface(Typeface.DEFAULT_BOLD);
+        all.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        all.setPadding(0, (int) (6 * dp), 0, (int) (6 * dp));
+        list.addView(all);
+        final List<Switch> switches = new ArrayList<>();
+        final boolean[] syncing = { false };
+        final Runnable syncAll = () -> {
+            boolean every = !switches.isEmpty();
+            for (Switch s : switches) every &= s.isChecked();
+            syncing[0] = true;
+            all.setChecked(every);
+            syncing[0] = false;
+        };
+        all.setOnCheckedChangeListener((b, checked) -> {
+            if (syncing[0]) return;
+            syncing[0] = true;
+            for (Switch s : switches) s.setChecked(checked);   // each one records its choice
+            syncing[0] = false;
+        });
+
         // Grouped like the desktop Features list: group heading, then each feature.
         Map<String, List<Object[]>> groups = new LinkedHashMap<>();
         for (Pkg p : packages)
@@ -262,7 +286,11 @@ final class ModsMenu {
                 Boolean on = choice.get(key);
                 sw.setChecked(on != null ? on : f.defaultEnabled);
                 sw.setPadding(0, (int) (10 * dp), 0, 0);
-                sw.setOnCheckedChangeListener((b, checked) -> choice.put(key, checked));
+                sw.setOnCheckedChangeListener((b, checked) -> {
+                    choice.put(key, checked);
+                    if (!syncing[0]) syncAll.run();
+                });
+                switches.add(sw);
                 list.addView(sw);
                 TextView desc = new TextView(activity);
                 // The package name beneath the feature, as on desktop, unless it only repeats it.
@@ -273,6 +301,8 @@ final class ModsMenu {
                 list.addView(desc);
             }
         }
+
+        syncAll.run();
 
         ScrollView scroll = new ScrollView(activity);
         scroll.addView(list);
