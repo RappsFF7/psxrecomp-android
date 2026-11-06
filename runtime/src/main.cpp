@@ -20899,8 +20899,10 @@ int main(int argc, char** argv) {
                 return 1;
             }
         } else if (!PSXRecompV4::mod_runtime_commit(resolved_disc, &mod_error)) {
-            std::fprintf(stderr, "psxrecomp: cannot launch with selected mods: %s\n",
-                         mod_error.c_str());
+            /* Say why on screen: without a console (Android, a desktop
+             * shortcut) the game would otherwise just close. */
+            launcher_warning("Cannot start with the selected mods",
+                             mod_error + "\n\nTurn the mod off (or remove it) in the Mods menu.");
             return 1;
         }
         timing.success();

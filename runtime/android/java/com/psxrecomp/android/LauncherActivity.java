@@ -168,13 +168,11 @@ public class LauncherActivity extends Activity {
         settings.setOnClickListener(v -> new PsxMenu(this, null).showSettings());
         root.addView(settings, button(dp));
 
-        /* The game's own mod features (assets/mods/bundled), when the APK carries any. */
-        if (ModsMenu.available(this)) {
-            Button mods = new Button(this);
-            mods.setText("Mods");
-            mods.setOnClickListener(v -> ModsMenu.show(this));
-            root.addView(mods, button(dp));
-        }
+        /* Mod features: the game's own (assets/mods/bundled) and .psxmod files the player adds. */
+        Button mods = new Button(this);
+        mods.setText("Mods");
+        mods.setOnClickListener(v -> ModsMenu.show(this));
+        root.addView(mods, button(dp));
 
         TextView hint = new TextView(this);
         hint.setText("Pick the .cue and its .bin together (long-press to select both), "
@@ -409,6 +407,10 @@ public class LauncherActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != RESULT_OK || data == null) return;
+        if (requestCode == ModsMenu.REQUEST_MOD && data.getData() != null) {
+            ModsMenu.onPicked(this, data.getData());
+            return;
+        }
         if (requestCode == REQUEST_CARD && data.getData() != null) {
             importCard(data.getData());
             return;

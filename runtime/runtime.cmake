@@ -1706,6 +1706,9 @@ function(psxrecomp_add_runtime_target target)
         # SDL's Android Activity loads the native game entry point as libmain.so.
         add_library(${target} SHARED
             ${PSXRECOMP_RUNTIME_SOURCES}
+            # The launcher's Mods menu reads and changes the mod catalog
+            # through the package manager, over JNI.
+            ${PSXRECOMP_ROOT}/runtime/android/mods_jni.cpp
             ${mode_source}
             ${generated_sources}
             ${PSXRT_EXTRAS_SOURCES}
