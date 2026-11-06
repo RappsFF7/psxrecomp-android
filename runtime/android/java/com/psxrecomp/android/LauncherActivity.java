@@ -120,7 +120,12 @@ public class LauncherActivity extends Activity {
         root.setGravity(Gravity.CENTER);
         int pad = (int) (24 * dp);
         root.setPadding(pad, pad, pad, pad);
-        container.addView(root, new FrameLayout.LayoutParams(
+        /* Centered when it fits, scrollable when the screen is too short for it. */
+        ScrollView scroller = new ScrollView(this);
+        scroller.setFillViewport(true);
+        scroller.addView(root, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        container.addView(scroller, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
         TextView title = new TextView(this);
@@ -138,10 +143,17 @@ public class LauncherActivity extends Activity {
         status.setPadding(0, (int) (8 * dp), 0, (int) (20 * dp));
         root.addView(status, wrap());
 
+        /* Wide screens (the menu is landscape-only) put the buttons in pairs, so
+         * all of them fit under the title; a narrow one keeps a single column. */
+        android.util.DisplayMetrics screen = getResources().getDisplayMetrics();
+        final boolean pairs = screen.widthPixels > screen.heightPixels;
+        LinearLayout row1 = buttonRow(root, pairs), row2 = buttonRow(root, pairs),
+                row3 = buttonRow(root, pairs);
+
         resume = new Button(this);
         resume.setText("Continue");
         resume.setOnClickListener(v -> chooseState());
-        root.addView(resume, button(dp));
+        row1.addView(resume, button(dp, pairs));
 
         play = new Button(this);
         play.setText("Play");
@@ -151,28 +163,28 @@ public class LauncherActivity extends Activity {
             new File(getFilesDir(), PsxMenu.AUTOLOAD_FILE).delete();
             startGame();
         });
-        root.addView(play, button(dp));
+        row1.addView(play, button(dp, pairs));
 
         Button select = new Button(this);
         select.setText("Select game file");
         select.setOnClickListener(v -> pickFiles());
-        root.addView(select, button(dp));
+        row2.addView(select, button(dp, pairs));
 
         Button importCard = new Button(this);
         importCard.setText("Import memory card");
         importCard.setOnClickListener(v -> pickCard());
-        root.addView(importCard, button(dp));
+        row2.addView(importCard, button(dp, pairs));
 
         Button settings = new Button(this);
         settings.setText("Settings");
         settings.setOnClickListener(v -> new PsxMenu(this, null).showSettings());
-        root.addView(settings, button(dp));
+        row3.addView(settings, button(dp, pairs));
 
         /* Mod features: the game's own (assets/mods/bundled) and .psxmod files the player adds. */
         Button mods = new Button(this);
         mods.setText("Mods");
         mods.setOnClickListener(v -> ModsMenu.show(this));
-        root.addView(mods, button(dp));
+        row3.addView(mods, button(dp, pairs));
 
         TextView hint = new TextView(this);
         hint.setText("Pick the .cue and its .bin together (long-press to select both), "
@@ -206,11 +218,22 @@ public class LauncherActivity extends Activity {
                 ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
-    private static LinearLayout.LayoutParams button(float dp) {
+    private static LinearLayout.LayoutParams button(float dp, boolean pairs) {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 (int) (260 * dp), ViewGroup.LayoutParams.WRAP_CONTENT);
         lp.topMargin = (int) (6 * dp);
+        if (pairs) lp.leftMargin = lp.rightMargin = (int) (6 * dp);
         return lp;
+    }
+
+    /** A row for a pair of buttons, or (single column) the menu column itself. */
+    private LinearLayout buttonRow(LinearLayout column, boolean pairs) {
+        if (!pairs) return column;
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER);
+        column.addView(row, wrap());
+        return row;
     }
 
     private boolean hasGame() {
