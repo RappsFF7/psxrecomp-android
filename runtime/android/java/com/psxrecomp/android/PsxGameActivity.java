@@ -94,6 +94,15 @@ public class PsxGameActivity extends SDLActivity {
     @Override
     protected void onCreate(Bundle state) {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+        // SDL re-requests an orientation when it creates the window; with a
+        // resizable window and no hint it picks FULL_USER (portrait allowed),
+        // overriding the line above. SDL hints fall back to env vars, so pin
+        // landscape (either side) before the native thread starts.
+        try {
+            Os.setenv("SDL_ORIENTATIONS", "LandscapeLeft LandscapeRight", true);
+        } catch (ErrnoException e) {
+            // Keep going; orientation just won't be pinned.
+        }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (Build.VERSION.SDK_INT >= 28) {
             getWindow().getAttributes().layoutInDisplayCutoutMode =
